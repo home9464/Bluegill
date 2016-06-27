@@ -1,0 +1,140 @@
+#######################################################################################
+#																					  #
+#              Applications															  #
+#																					  #	
+#######################################################################################
+
+
+#########################
+#Novoalign
+#########################
+
+1:novoalign:/bluegill/app/novoalign/2.08.01/::COMMENT:-r None -k 
+
+#########################
+#BWA
+#########################
+
+2:bwa aln:/bluegill/app/bwa/0.6.2/::COMMENT:-t 24 
+2:bwa samse:/bluegill/app/bwa/0.6.2/::COMMENT:
+2:bwa sampe:/bluegill/app/bwa/0.6.2/::COMMENT:-P
+
+#########################
+#Picard
+#########################
+
+10:SortSam.jar:/bluegill/app/picard/1.75/:::VERBOSITY=ERROR QUIET=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SO=coordinate COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=5000000 TMP_DIR=.
+11:FixMateInformation.jar:/bluegill/app/picard/1.75/:::VERBOSITY=ERROR QUIET=true VALIDATION_STRINGENCY=SILENT SO=coordinate CREATE_INDEX=true TMP_DIR=.
+12:BuildBamIndex.jar:/bluegill/app/picard/1.75/:::VERBOSITY=ERROR QUIET=true VALIDATION_STRINGENCY=SILENT
+13:MarkDuplicates.jar:/bluegill/app/picard/1.75/:::VERBOSITY=ERROR QUIET=true VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true ASSUME_SORTED=true TMP_DIR=.
+14:CollectRnaSeqMetrics.jar:/bluegill/app/picard/1.75/:::VERBOSITY=ERROR QUIET=true VALIDATION_STRINGENCY=SILENT REMOVE_DUPLICATES=true ASSUME_SORTED=true TMP_DIR=.
+15:SortSam.jar:/bluegill/app/picard/1.75/:::VERBOSITY=ERROR QUIET=true VALIDATION_STRINGENCY=SILENT CREATE_INDEX=true SO=queryname COMPRESSION_LEVEL=5 MAX_RECORDS_IN_RAM=5000000 TMP_DIR=.
+16:ReorderSam.jar:/bluegill/app/picard/1.75/:::CREATE_INDEX=true ALLOW_INCOMPLETE_DICT_CONCORDANCE=true
+
+#########################
+#GATK
+#########################
+
+30:GenomeAnalysisTK.jar -T IndelRealigner:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:
+
+#always put "31,32" together
+31:GenomeAnalysisTK.jar -T BaseRecalibrator:/bluegill/app/gatk/2.3-0/:hg19:COMMENT: -knownSites hg19.1000G_EUR_0.05.vcf
+32:GenomeAnalysisTK.jar -T PrintReads:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:
+
+33:GenomeAnalysisTK.jar -T DepthOfCoverage:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-baseCounts -omitIntervals -omitLocusTable -omitSampleSummary
+
+34:GenomeAnalysisTK.jar -T ReduceReads:/bluegill/app/gatk/2.3-0/::COMMENT:
+
+
+
+#11:GenomeAnalysisTK.jar -T UnifiedGenotyper:/bluegill/app/gatk/2.3-0/::COMMENT:-glm BOTH --dbsnp 1000g.ceu.vcf -stand_call_conf 50.0 -stand_emit_conf 10.0 -dcov 50.0
+40:GenomeAnalysisTK.jar -T UnifiedGenotyper:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-glm BOTH -stand_call_conf 50.0 -stand_emit_conf 10.0 -dcov 200 --dbsnp hg19.dbsnp.vcf
+41:GenomeAnalysisTK.jar -T HaplotypeCaller:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-stand_call_conf 50.0 -stand_emit_conf 10.0 -dcov 200 --dbsnp hg19.dbsnp.vcf
+
+
+#always put "42,43,44" together
+#42:GenomeAnalysisTK.jar -T VariantRecalibrator:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-mode BOTH -resource:hapmap,known=false,training=true,truth=true,prior=15.0 hg19.dbsnp.vcf -resource:omni,known=false,training=true,truth=false,prior=12.0 hg19.dbsnp.vcf -resource:dbsnp,known=true,training=false,truth=false,prior=8.0 hg19.dbsnp.vcf -an QD -an DP -an ReadPosRankSum -an MQRankSum -an FS -an MQ --maxGaussians 4
+#42:GenomeAnalysisTK.jar -T VariantRecalibrator:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-mode INDEL -an QD -an DP -an ReadPosRankSum -an MQRankSum -an FS -an MQ --maxGaussians 4
+#42:GenomeAnalysisTK.jar -T VariantRecalibrator:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-mode SNP -an QD -an DP -an ReadPosRankSum -an MQRankSum -an FS -an MQ --maxGaussians 4
+42:GenomeAnalysisTK.jar -T VariantRecalibrator:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-mode BOTH -resource:hapmap,known=false,training=true,truth=true,prior=15.0 hg19.hapmap_3.3.vcf -resource:omni,known=false,training=true,truth=false,prior=12.0 hg19.1000G_omni2.5.vcf -resource:dbsnp,known=true,training=false,truth=false,prior=8.0 hg19.dbsnp.vcf -an QD -an DP -an ReadPosRankSum -an FS -an MQ
+43:GenomeAnalysisTK.jar -T ApplyRecalibration:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-mode BOTH --ts_filter_level 99
+44:GenomeAnalysisTK.jar -T SelectVariants:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-select "VQSLOD>4.0"
+
+#45:GenomeAnalysisTK.jar -T VariantFiltration:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:-cluster 3 -window 10 --filterName "SNP" --filterExpression "QD<2.0||MQ<40.0||FS>60.0||HaplotypeScore>13.0" --filterName "INDEL" --filterExpression "QD<2.0||FS>200.0"
+#46:GenomeAnalysisTK.jar -T VariantFiltration:/bluegill/app/gatk/2.3-0/:hg19:COMMENT:--filterName "INDEL" --filterExpression "QD<2.0||FS>200.0"
+
+#########################
+#Samtools
+#########################
+
+50:samtools mpileup:/bluegill/app/samtools/0.1.18-dev/::COMMENT:
+51:samtools merge:/bluegill/app/samtools/0.1.18-dev/::COMMENT:
+
+#########################
+#ANNOVAR
+#########################
+
+60:convert2annovar.pl:/bluegill/app/annovar/0.1/:hg19:COMMENT:-format vcf4 -includeinfo
+61:annotate_variation.pl:/bluegill/app/annovar/0.1/:hg19:COMMENT:-geneanno -dbtype knownGene
+
+#########################
+#VarScan
+#########################
+
+70:VarScan.jar mpileup2snp:/bluegill/app/varscan/2.3.3/:hg19::--output-vcf 1
+71:VarScan.jar mpileup2indel:/bluegill/app/varscan/2.3.3/:hg19::--output-vcf 1
+72:VarScan.jar mpileup2cns:/bluegill/app/varscan/2.3.3/:hg19::--output-vcf 1
+73:VarScan.jar somatic:/bluegill/app/varscan/2.3.3/:hg19::--output-vcf 1 --min-var-freq 0
+
+#74:VarScan.jar copynumber:/bluegill/app/varscan/2.3.3/:hg19:: --min-coverage 10 --min-reads 2  --min-avg-qual 20
+#75:VarScan.jar filter:/bluegill/app/varscan/2.3.3/:hg19:: --min-coverage 10 --min-reads 2  --min-avg-qual 20
+#76:VarScan.jar somaticFilter:/bluegill/app/varscan/2.3.3/:hg19:: --min-coverage 10 --min-reads 2  --min-avg-qual 20
+
+#########################
+#USeq
+#########################
+
+#80:Sam2USeq.jar:/bluegill/app/useq/8.3.9/Apps::COMMENT: 
+#80:Sam2USeq.jar:/bluegill/app/useq/8.5.0/Apps:hg19:COMMENT:-b hg19.CCDSExonsRptMskedMerged.bed.zip -r -v H_sapiens_Feb_2009 
+#81:MergePairedSamAlignments.jar:/bluegill/app/useq/8.5.0/Apps::COMMENT:
+#82:RNASeq.jar:/bluegill/app/useq/8.5.0/Apps:hg19:COMMENT:-v H_sapiens_Feb_2009 -g hg19.EnsGenesWithNames.ucsc.gz
+#83:ChIPSeq.jar:/bluegill/app/useq/8.5.0/Apps:hg19:COMMENT:-y SAM -d 1 -u -e -b -v H_sapiens_Feb_2009
+
+80:Sam2USeq.jar:/bluegill/app/useq/8.5.0/Apps::COMMENT: 
+81:MergePairedSamAlignments.jar:/bluegill/app/useq/8.5.0/Apps::COMMENT:
+82:RNASeq.jar:/bluegill/app/useq/8.5.0/Apps::COMMENT:
+83:ChIPSeq.jar:/bluegill/app/useq/8.5.0/Apps::COMMENT:
+
+
+100:vaast_converter:/bluegill/app/vaast/1.0.0/bin/vaast_tools:hg19:COMMENT:
+101:VAT:/bluegill/app/vaast/1.0.0/bin:hg19:COMMENT:
+102:VST:/bluegill/app/vaast/1.0.0/bin:hg19:COMMENT:
+103:VAAST:/bluegill/app/vaast/1.0.0/bin:hg19:COMMENT:
+
+#########################
+#In-house apps
+#########################
+
+#This will split a VCF into 2 VCF files, one for SNPs, one for Indels. (A.vcf -> A.snp.vcf and A.indel.vcf) 
+200:vcf2snpindel:/bluegill/app/misc/0.1::COMMENT:
+
+#######################################################################################
+#																					  #
+#              Pipelines															  #
+#																					  #	
+#######################################################################################
+
+#backward-compatible pipeliens
+@align:1,10
+@align_bwa:2,10
+@recal:1,11,13,10,30,31,32,34
+@snp:1,11,13,10,30,31,32,34,40,42,43,44
+@indel:1,11,13,10,30,31,32,34,40,42,43,44
+@snpindel:1,11,13,10,30,31,32,34,40,42,43,44
+@annot:1,11,13,10,30,31,32,34,40,42,43,44,60,61
+@rnaseq:1,82
+@chipseq:1,83
+
+
+#new pipeliens
+@hc:1,11,13,10,16,30,31,32,10,41,42,43,44

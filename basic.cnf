@@ -1,0 +1,69 @@
+#master node
+[cluster]
+CLUSTER_USER = bluegill
+CLUSTER_NAME = mycluster.mycompany.com
+CLUSTER_MASTER_DIR = /home/bluegill/cluster
+CLUSTER_MASTER_TMP_DIR = /home/bluegill/tmp
+
+#computation node
+CLUSTER_NODE_DIR = /mnt
+CLUSTER_NODE_TMP_DIR = /mnt
+
+#can use either the tmp dir on master(larger disk capacity) or node (better performance)
+CLUSTER_TMP_DIR = CLUSTER_NODE_TMP_DIR 
+
+[localserver]
+LOCAL_SERVER_USER = bluegill
+LOCAL_SERVER_NAME = mysubmitter.mycompany.com
+LOCAL_SERVER_DIR = /bluegill
+
+[pbs]
+#seconds. Query if a job was completed in this interval.
+PBS_QUERY_INTERVAL_SECONDS = 10
+
+#hours
+MAX_WALLTIME_HOURS = 240
+CLUSTER_DOWNTIME = None
+
+[misc]
+SMTP_SERVER = smtp.gmail.com
+RE_PAIRED_END_READ_FILE_1 = (.*)_1\.(.+)
+RE_PAIRED_END_READ_FILE_2 = (.*)_2\.(.+)
+
+#generally you should not change any following variables unless you completely understand how it works
+[path]
+PATH_APP = app
+PATH_DATA = data
+PATH_LOG = log
+PATH_JOB = job
+PATH_PIPELINE = pipeline
+
+[rsync]
+#seconds, query remote data server for new data
+RSYNC_QUERY_INTERVAL_SECONDS  = 10 
+
+[file]
+#commands of each job
+FILE_CMD           = cmd.txt
+
+#standard output and error of each job
+FILE_STDOUT        = stdout.txt 
+
+#standard output and error of each job
+FILE_STDERR        = stderr.txt
+ 
+#log information of each job
+FILE_LOG           = log.txt
+ 
+#empty file as "abort a job" place holder
+FILE_TAG_ABORT     = a 
+
+#empty file as "begin a job" place holder
+FILE_TAG_BEGIN     = b 
+
+#empty file as "begin a job" place holder
+FILE_TAG_RUNNING   = r 
+
+#empty file as "dry-run a job (only list applications to be executed)" place holder
+FILE_TAG_DRYRUN   = d 
+
